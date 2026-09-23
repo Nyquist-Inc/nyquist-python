@@ -1,0 +1,33 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.getnyquist/nyquist",
+  "title": "Nyquist",
+  "description": "Agent research desk for funds: bull/bear debate on a ticker, market data, VaR, quant tools.",
+  "websiteUrl": "https://getnyquist.com",
+  "version": "0.5.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "nyquist-mcp",
+      "version": "0.5.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "NYQUIST_API_KEY",
+          "description": "Your Nyquist API key (nyquist.pro/settings/api)",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "NYQUIST_BASE_URL",
+          "description": "API base URL; defaults to https://api.nyquist.pro",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

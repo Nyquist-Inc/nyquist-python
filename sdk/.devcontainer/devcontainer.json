@@ -1,0 +1,25 @@
+{
+  "name": "Nyquist Quant Research",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "postCreateCommand": "pip install --upgrade pip && pip install -e '.[plot,dev]'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests"]
+      }
+    }
+  },
+  "remoteEnv": {
+    "NYQUIST_API_KEY": "${localEnv:NYQUIST_API_KEY}",
+    "NYQUIST_BASE_URL": "${localEnv:NYQUIST_BASE_URL}"
+  }
+}

@@ -1,0 +1,70 @@
+name: release
+
+# Push a tag vX.Y.Z whose version matches both packages and server.json.
+# Uploads use PyPI trusted publishing (OIDC): no API token is stored anywhere.
+# Each PyPI project must list this repository, this workflow file and the
+# `pypi` environment as its trusted publisher.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions: {}
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The tag agrees with every version pin
+        run: |
+          python - "${GITHUB_REF_NAME#v}" <<'PY'
+          import json, sys, tomllib
+          tag = sys.argv[1]
+          pins = {
+              "sdk/pyproject.toml": tomllib.load(open("sdk/pyproject.toml", "rb"))["project"]["version"],
+              "mcp/pyproject.toml": tomllib.load(open("mcp/pyproject.toml", "rb"))["project"]["version"],
+              "mcp/server.json": json.load(open("mcp/server.json"))["version"],
+          }
+          wrong = {path: v for path, v in pins.items() if v != tag}
+          sys.exit(f"tag v{tag} disagrees with {wrong}" if wrong else 0)
+          PY
+      - run: python -m pip install build twine
+      - run: |
+          python -m build --outdir dist/sdk sdk
+          python -m build --outdir dist/mcp mcp
+          twine check dist/sdk/* dist/mcp/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      # nyquist-mcp depends on nyquist-sdk: upload the SDK first so no one can
+      # install an MCP release whose SDK is not on the index yet.
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/sdk/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/mcp/
